@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+*.db
+
 # Distribution / packaging
 .Python
 build/
@@ -140,9 +142,20 @@ celerybeat.pid
 .venv
 env/
 venv/
+dspa-bot-venv/
 ENV/
 env.bak/
 venv.bak/
+
+# ChromaDB local store
+chroma_db/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+frontend/.next/
+frontend/node_modules/
 
 # Spyder project settings
 .spyderproject

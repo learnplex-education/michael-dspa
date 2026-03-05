@@ -1,0 +1,13 @@
+langchain>=0.3
+langchain-community>=0.3
+langchain-openai>=0.3
+langchain-chroma>=0.2
+langchain-text-splitters>=0.3
+beautifulsoup4>=4.12
+chromadb>=0.6
+openai>=1.60
+streamlit>=1.40
+pypdf>=4.0
+docx2txt>=0.8
+unstructured>=0.16
+python-docx>=1.1

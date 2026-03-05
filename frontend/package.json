@@ -1,0 +1,29 @@
+{
+  "name": "dspa-bot-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@ai-sdk/react": "latest",
+    "@tailwindcss/postcss": "^4.2.1",
+    "ai": "latest",
+    "framer-motion": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-markdown": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "typescript": "latest"
+  }
+}
