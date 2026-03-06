@@ -195,7 +195,7 @@ def _query_pinecone(question: str):
     # Request top_k matches and then enforce our own score_threshold for safety.
     res = _index.query(
         vector=query_vec,
-        top_k=8,
+        top_k=15,
         include_metadata=True,
     )
     score_threshold = 0.25

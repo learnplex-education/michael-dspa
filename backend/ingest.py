@@ -119,7 +119,7 @@ def build() -> None:
         sys.exit(1)
 
     all_chunks = []
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
 
     logger.info("Loading web pages...")
     for url in URLS:
@@ -165,8 +165,8 @@ def build() -> None:
         }
         pinecone_vectors.append((f"chunk-{i}", vec, metadata))
 
-    # Upsert in a single batch; Pinecone will overwrite any existing ids.
-    index.upsert(vectors=pinecone_vectors)
+    # Upsert in batches to stay under Pinecone's 2MB request limit.
+    index.upsert(vectors=pinecone_vectors, batch_size=50)
 
     _save_manifest()
     logger.info("✅ Vector store persisted to Pinecone index")
