@@ -20,10 +20,26 @@ from fastapi.responses import StreamingResponse  # noqa: E402
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings  # noqa: E402
 from langchain_core.messages import SystemMessage, HumanMessage  # noqa: E402
 from pinecone import Pinecone  # noqa: E402
+from slowapi import Limiter, _rate_limit_exceeded_handler  # noqa: E402
+from slowapi.errors import RateLimitExceeded  # noqa: E402
+from slowapi.util import get_remote_address  # noqa: E402
 
 from config import MAX_QUERIES_PER_SESSION, PINECONE_HOST, SYSTEM_PROMPT  # noqa: E402
 
+
+def _rate_limit_key(request: Request) -> str:
+    """Use X-Forwarded-For when behind a proxy (e.g. Render), else direct client IP."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        # Leftmost is the original client; may be "client, proxy1, proxy2"
+        return forwarded.split(",")[0].strip()
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=_rate_limit_key)
 app = FastAPI(title="DSPA Bot API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -95,6 +111,7 @@ async def get_session(request: Request):
 
 
 @app.post("/chat")
+@limiter.limit("10/minute")
 async def chat(request: Request):
     body = await request.json()
     session_id = request.headers.get("X-Session-ID", "anonymous")

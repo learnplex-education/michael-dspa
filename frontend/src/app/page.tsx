@@ -46,9 +46,9 @@ function generateSessionId(): string {
 function LoadingSteps() {
   const [step, setStep] = useState(0);
   const steps = [
-    "Searching official CDSS records (212 chunks)…",
-    "Consulting Peer Advising Archive…",
-    "Generating response…",
+    "Searching official CDSS records…",
+    "Consulting Peer Advising Notes…",
+    "Generating a helpful response…",
   ];
 
   useEffect(() => {
@@ -90,7 +90,7 @@ function LoadingSteps() {
             ) : (
               <span className="text-gray-300 text-xs">○</span>
             )}
-            <span className={i <= step ? "text-gray-700" : "text-gray-400"}>
+            <span className={i <= step ? "text-gray-500" : "text-gray-400"}>
               {label}
             </span>
           </motion.div>
@@ -210,14 +210,22 @@ export default function Home() {
 
   const limitReached = queryCount >= MAX_QUERIES;
 
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: `${API_URL}/chat`,
-        headers: { "X-Session-ID": sessionId },
-      }),
-    [sessionId],
-  );
+  const transport = useMemo(() => {
+    const chatUrl = `${API_URL}/chat`;
+    return new DefaultChatTransport({
+      api: chatUrl,
+      headers: { "X-Session-ID": sessionId },
+      fetch: async (input, init) => {
+        const response = await fetch(input, init);
+        if (response.status === 429) {
+          throw new Error(
+            "Whoa there! You're sending messages too fast. Please wait a minute.",
+          );
+        }
+        return response;
+      },
+    });
+  }, [sessionId]);
 
   const { messages, sendMessage, status } = useChat({
     transport,
@@ -231,6 +239,11 @@ export default function Home() {
         setBackendError(
           `Cannot reach the backend. Make sure the FastAPI server is running on ${API_URL}`,
         );
+      } else if (
+        err.message?.includes("429") ||
+        err.message?.includes("too fast")
+      ) {
+        setBackendError(err.message);
       } else {
         setBackendError(`Something went wrong: ${err.message}`);
       }
