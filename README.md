@@ -1,6 +1,6 @@
 # 🐻 Michael-DSPA: AI Peer Advisor
 
-**Michael-DSPA** is a production-ready, RAG-powered (Retrieval-Augmented Generation) assistant designed to provide accurate academic advising for Data Science students at UC Berkeley. It leverages the "Michael" Peer Advising Archive to bridge the gap between official documentation and student-led wisdom.
+**Michael-DSPA** is a RAG-powered (Retrieval-Augmented Generation) assistant designed to provide accurate academic advising for Data Science students at UC Berkeley. It leverages the a Peer Advising Notes archive alongside CDSS websites to bridge the gap between official documentation and student-led wisdom. All information should be verified with a Data Science Major Advisor before making any decisions: https://cdss.berkeley.edu/dsus/advising/data-science-advising.
 
 ---
 
