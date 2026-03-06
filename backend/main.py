@@ -18,10 +18,10 @@ from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import StreamingResponse  # noqa: E402
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings  # noqa: E402
-from langchain_chroma import Chroma  # noqa: E402
 from langchain_core.messages import SystemMessage, HumanMessage  # noqa: E402
+from pinecone import Pinecone  # noqa: E402
 
-from config import CHROMA_DIR, MAX_QUERIES_PER_SESSION, SYSTEM_PROMPT  # noqa: E402
+from config import MAX_QUERIES_PER_SESSION, PINECONE_HOST, SYSTEM_PROMPT  # noqa: E402
 
 app = FastAPI(title="DSPA Bot API")
 
@@ -41,8 +41,10 @@ STREAM_HEADERS = {
 STREAM_MEDIA = "text/event-stream; charset=utf-8"
 
 sessions: dict[str, int] = defaultdict(int)
-vectorstore: Chroma | None = None
 llm: ChatOpenAI | None = None
+pc: Pinecone | None = None
+_index = None
+_embeddings: OpenAIEmbeddings | None = None
 
 
 def _sse(payload: dict | str) -> str:
@@ -63,14 +65,19 @@ def _extract_question(messages: list[dict]) -> str:
 
 @app.on_event("startup")
 async def startup() -> None:
-    global vectorstore, llm
-    if not os.path.exists(CHROMA_DIR):
+    global pc, _index, _embeddings, llm
+
+    if not os.environ.get("PINECONE_API_KEY"):
+        raise RuntimeError("PINECONE_API_KEY not set. Add it to your .env file.")
+    if not (PINECONE_HOST or os.environ.get("PINECONE_HOST")):
         raise RuntimeError(
-            f"Vector store not found at {CHROMA_DIR}. "
-            "Run `python ingest.py` first."
+            "PINECONE_HOST not set. Copy the Host URL from your Pinecone dashboard into .env."
         )
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    vectorstore = Chroma(persist_directory=CHROMA_DIR, embedding_function=embeddings)
+
+    _embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+    index_host = PINECONE_HOST or os.environ.get("PINECONE_HOST")
+    _index = pc.Index(host=index_host)
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, streaming=True)
 
 
@@ -111,21 +118,18 @@ async def chat(request: Request):
     messages = body.get("messages", [])
     question = _extract_question(messages)
 
-    retriever = vectorstore.as_retriever(
-        search_type="similarity_score_threshold",
-        search_kwargs={"k": 8, "score_threshold": 0.25},
-    )
-    docs = await asyncio.to_thread(retriever.invoke, question)
+    # Retrieve relevant chunks from Pinecone using OpenAI embeddings.
+    matches = await asyncio.to_thread(_query_pinecone, question)
 
     context_parts: list[str] = []
     seen_sources: set[str] = set()
     sources: list[dict] = []
-    for doc in docs:
-        src = doc.metadata.get("source", "Unknown")
-        src_type = doc.metadata.get("type", "Official Website")
-        context_parts.append(
-            f"[Source: {src} | Type: {src_type}]\n{doc.page_content}"
-        )
+    for match in matches:
+        metadata = match.metadata or {}
+        text = metadata.get("text") or ""
+        src = metadata.get("source", "Unknown")
+        src_type = metadata.get("type", "Official Website")
+        context_parts.append(f"[Source: {src} | Type: {src_type}]\n{text}")
         if src not in seen_sources:
             seen_sources.add(src)
             sources.append({"source": src, "type": src_type})
@@ -174,3 +178,21 @@ async def chat(request: Request):
         sessions[session_id] += 1
 
     return StreamingResponse(generate(), media_type=STREAM_MEDIA, headers=STREAM_HEADERS)
+
+
+def _query_pinecone(question: str):
+    """Query Pinecone for the most relevant chunks, applying a score threshold."""
+    if not question.strip():
+        return []
+    if _embeddings is None or _index is None:
+        raise RuntimeError("Pinecone index or embeddings not initialized.")
+
+    query_vec = _embeddings.embed_query(question)
+    # Request top_k matches and then enforce our own score_threshold for safety.
+    res = _index.query(
+        vector=query_vec,
+        top_k=8,
+        include_metadata=True,
+    )
+    score_threshold = 0.25
+    return [m for m in (res.matches or []) if m.score is None or m.score >= score_threshold]

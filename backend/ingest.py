@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone ingestion script — scrapes web pages and loads local files into ChromaDB."""
+"""Standalone ingestion script — scrapes web pages and loads local files into Pinecone."""
 
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ from langchain_community.document_loaders import (  # noqa: E402
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter  # noqa: E402
 from langchain_openai import OpenAIEmbeddings  # noqa: E402
-from langchain_chroma import Chroma  # noqa: E402
+from pinecone import Pinecone  # noqa: E402
 
-from config import CHROMA_DIR, KNOWLEDGE_BASE_DIR, MANIFEST_PATH, URLS  # noqa: E402
+from config import KNOWLEDGE_BASE_DIR, MANIFEST_PATH, URLS  # noqa: E402
 
 try:
     from langchain_community.document_loaders import UnstructuredWordDocumentLoader
@@ -62,7 +62,10 @@ def count_sources() -> int:
 
 
 def _save_manifest() -> None:
-    os.makedirs(CHROMA_DIR, exist_ok=True)
+    # Persist a simple manifest so we can detect when sources change and trigger re-ingestion.
+    manifest_dir = os.path.dirname(MANIFEST_PATH)
+    if manifest_dir:
+        os.makedirs(manifest_dir, exist_ok=True)
     with open(MANIFEST_PATH, "w") as f:
         json.dump({"source_count": count_sources()}, f)
 
@@ -107,6 +110,14 @@ def build() -> None:
         logger.error("OPENAI_API_KEY not set. Add it to your .env file.")
         sys.exit(1)
 
+    if not os.environ.get("PINECONE_API_KEY"):
+        logger.error("PINECONE_API_KEY not set. Add it to your .env file.")
+        sys.exit(1)
+
+    if not os.environ.get("PINECONE_HOST"):
+        logger.error("PINECONE_HOST not set. Copy the Host URL from your Pinecone dashboard into .env.")
+        sys.exit(1)
+
     all_chunks = []
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
 
@@ -128,15 +139,37 @@ def build() -> None:
     local_chunks = _load_local_docs(splitter)
     all_chunks.extend(local_chunks)
 
+    total_web = len(all_chunks) - len(local_chunks)
+    total_local = len(local_chunks)
     logger.info(
         f"\nTotal: {len(all_chunks)} chunks "
-        f"({len(all_chunks) - len(local_chunks)} web + {len(local_chunks)} local)"
+        f"({total_web} web + {total_local} local)"
     )
 
+    # Embed all chunks with OpenAI and push to Pinecone
+    logger.info("Embedding chunks with OpenAI and upserting to Pinecone...")
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    Chroma.from_documents(all_chunks, embedding=embeddings, persist_directory=CHROMA_DIR)
+    texts = [doc.page_content for doc in all_chunks]
+    vectors = embeddings.embed_documents(texts)
+
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+    index_host = os.environ.get("PINECONE_HOST")
+    index = pc.Index(host=index_host)
+
+    pinecone_vectors = []
+    for i, (doc, vec) in enumerate(zip(all_chunks, vectors)):
+        metadata = {
+            "source": doc.metadata.get("source", ""),
+            "type": doc.metadata.get("type", ""),
+            "text": doc.page_content,
+        }
+        pinecone_vectors.append((f"chunk-{i}", vec, metadata))
+
+    # Upsert in a single batch; Pinecone will overwrite any existing ids.
+    index.upsert(vectors=pinecone_vectors)
+
     _save_manifest()
-    logger.info(f"✅ Vector store persisted to {CHROMA_DIR}")
+    logger.info("✅ Vector store persisted to Pinecone index")
 
 
 def main() -> None:
@@ -146,16 +179,12 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if os.path.exists(CHROMA_DIR) and not args.force:
+    if os.path.exists(MANIFEST_PATH) and not args.force:
         logger.info(
-            f"Vector store already exists at {CHROMA_DIR}.\n"
-            "Use --force to delete and rebuild."
+            f"Existing Pinecone manifest found at {MANIFEST_PATH}.\n"
+            "Use --force to re-embed and upsert all chunks."
         )
         return
-
-    if os.path.exists(CHROMA_DIR):
-        logger.info("Removing existing vector store...")
-        shutil.rmtree(CHROMA_DIR)
 
     build()
 

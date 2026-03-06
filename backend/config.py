@@ -8,6 +8,10 @@ CHROMA_DIR = str(PROJECT_ROOT / "chroma_db")
 KNOWLEDGE_BASE_DIR = str(PROJECT_ROOT / "knowledge_base")
 MANIFEST_PATH = os.path.join(CHROMA_DIR, "source_manifest.json")
 
+# Pinecone configuration (cloud vector store)
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "michael-dspa")
+PINECONE_HOST = os.getenv("PINECONE_HOST", "")
+
 MAX_QUERIES_PER_SESSION = 10
 
 URLS = [
