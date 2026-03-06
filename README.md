@@ -46,7 +46,7 @@ This project follows a **Decoupled Cloud Architecture**, ensuring high availabil
    pip install -r requirements.txt
    python main.py
 2. **Frontend:**
-   Bash
+   ```bash
    cd frontend
    npm install
    npm run dev
