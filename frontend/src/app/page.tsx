@@ -14,7 +14,8 @@ import {
 import ReactMarkdown from "react-markdown";
 
 const MAX_QUERIES = 10;
-const API_URL = "http://127.0.0.1:8000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 const SAMPLE_QUERIES = [
   {
@@ -228,7 +229,7 @@ export default function Home() {
         err.message?.includes("NetworkError")
       ) {
         setBackendError(
-          "Cannot reach the backend. Make sure the FastAPI server is running on http://127.0.0.1:8000",
+          `Cannot reach the backend. Make sure the FastAPI server is running on ${API_URL}`,
         );
       } else {
         setBackendError(`Something went wrong: ${err.message}`);
