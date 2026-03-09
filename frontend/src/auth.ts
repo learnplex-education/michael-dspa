@@ -10,12 +10,14 @@ declare module "next-auth" {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
-      // This forces Google to provide the id_token if it's being shy
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
       authorization: {
         params: {
           scope: "openid email profile",
+          prompt: "select_account", // This forces Google to show the account picker
+          access_type: "offline",
+          response_type: "code"
         },
       },
     }),
