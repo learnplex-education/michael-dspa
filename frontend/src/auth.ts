@@ -3,8 +3,14 @@ import Google from "next-auth/providers/google";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    // Uses AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET from the environment
-    Google,
+    Google({
+      // This forces Google to provide the id_token if it's being shy
+      authorization: {
+        params: {
+          scope: "openid email profile",
+        },
+      },
+    }),
   ],
   callbacks: {
     /**
