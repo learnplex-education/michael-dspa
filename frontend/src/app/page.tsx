@@ -351,7 +351,7 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* ── Sidebar ── */}
-      <aside className="hidden md:flex w-72 flex-col bg-berkeley-blue text-white">
+      <aside className="hidden md:flex w-72 flex-col h-full bg-berkeley-blue text-white">
         <div className="p-6 border-b border-white/10">
           <h1 className="text-lg font-bold tracking-tight">🐻 Michael-DSPA</h1>
           <p className="text-xs text-blue-200 mt-1">
@@ -385,6 +385,30 @@ export default function Home() {
             <br />
             It is NOT an official UC Berkeley tool.
           </p>
+        </div>
+
+        <div className="mt-auto p-4 border-t border-california-gold/20">
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex items-center w-full gap-2 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10 rounded-md"
+          >
+            <svg
+              className="w-[18px] h-[18px] shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Sign Out
+          </button>
         </div>
       </aside>
 
