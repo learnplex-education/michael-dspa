@@ -223,13 +223,14 @@ export default function Home() {
 
   const transport = useMemo(() => {
     const chatUrl = `${API_URL}/chat`;
+    console.log("DEBUG: Current idToken in session:", session?.idToken);
     return new DefaultChatTransport({
       api: chatUrl,
       headers: {
+        "Content-Type": "application/json",
         "X-Session-ID": sessionId,
-        Authorization: session?.idToken
-          ? `Bearer ${session.idToken}`
-          : "",
+        // CRITICAL: Ensure this exactly matches the variable names
+        "Authorization": session?.idToken ? `Bearer ${session.idToken}` : "",
       },
       fetch: async (input, init) => {
         const response = await fetch(input, init);
