@@ -229,9 +229,14 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
         "X-Session-ID": sessionId,
-        Authorization: session?.idToken ? `Bearer ${session.idToken}` : "",
       },
-      fetch: async (input, init) => {
+      fetch: async (input, init = {}) => {
+        init.headers = {
+          ...(init.headers || {}),
+          Authorization: session?.idToken
+            ? `Bearer ${session.idToken}`
+            : "",
+        };
         const response = await fetch(input, init);
         if (response.status === 429) {
           throw new Error(
