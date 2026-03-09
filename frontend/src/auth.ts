@@ -51,7 +51,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * so the chat UI can send it as a Bearer token to FastAPI.
      */
     async session({ session, token }) {
-      (session as any).idToken = (token as any).idToken;
+      // Directly assign the property
+      if (token.idToken) {
+        session.idToken = token.idToken as string;
+      }
       return session;
     },
   },
