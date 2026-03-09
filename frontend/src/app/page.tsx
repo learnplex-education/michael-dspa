@@ -222,44 +222,6 @@ export default function Home() {
   const isSessionReady =
     authStatus === "authenticated" && !!session?.idToken;
 
-  if (authStatus === "loading") {
-    return (
-      <div className="flex h-screen items-center justify-center bg-berkeley-blue text-white">
-        Loading Berkeley Session...
-      </div>
-    );
-  }
-
-  if (!isSessionReady) {
-    return (
-      <div className="min-h-screen bg-berkeley-blue text-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="text-6xl mb-2">🐻</div>
-          <h1 className="text-3xl font-extrabold tracking-tight">
-            Michael-DSPA
-          </h1>
-          <p className="text-sm text-blue-100">
-            AI peer advising for the UC Berkeley Data Science major. Sign in
-            with your Berkeley Google account to get started.
-          </p>
-          <button
-            type="button"
-            onClick={() => signIn("google")}
-            className="mt-4 inline-flex items-center justify-center w-full max-w-xs mx-auto rounded-full bg-california-gold text-berkeley-blue font-semibold text-base px-6 py-3 shadow-lg hover:bg-yellow-400 transition-colors min-h-[48px]"
-          >
-            Sign in with Berkeley Google Account
-          </button>
-          <p className="text-[11px] text-blue-200 mt-2">
-            Access is restricted to @berkeley.edu addresses to protect student
-            privacy and keep this tool focused on Berkeley&apos;s Data Science
-            program. This tool is an independent project by Michael Florip for
-            Learnplex. This is NOT an official UC Berkeley tool.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const transport = useMemo(() => {
     const chatUrl = `${API_URL}/chat`;
     return new DefaultChatTransport({
@@ -340,6 +302,45 @@ export default function Home() {
 
   const showLoadingSteps = chatStatus === "submitted";
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // ─── Auth Guards (after all hooks) ───
+  if (authStatus === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-berkeley-blue text-white">
+        Loading Berkeley Session...
+      </div>
+    );
+  }
+
+  if (!isSessionReady) {
+    return (
+      <div className="min-h-screen bg-berkeley-blue text-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="text-6xl mb-2">🐻</div>
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            Michael-DSPA
+          </h1>
+          <p className="text-sm text-blue-100">
+            AI peer advising for the UC Berkeley Data Science major. Sign in
+            with your Berkeley Google account to get started.
+          </p>
+          <button
+            type="button"
+            onClick={() => signIn("google")}
+            className="mt-4 inline-flex items-center justify-center w-full max-w-xs mx-auto rounded-full bg-california-gold text-berkeley-blue font-semibold text-base px-6 py-3 shadow-lg hover:bg-yellow-400 transition-colors min-h-[48px]"
+          >
+            Sign in with Berkeley Google Account
+          </button>
+          <p className="text-[11px] text-blue-200 mt-2">
+            Access is restricted to @berkeley.edu addresses to protect student
+            privacy and keep this tool focused on Berkeley&apos;s Data Science
+            program. This tool is an independent project by Michael Florip for
+            Learnplex. This is NOT an official UC Berkeley tool.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
