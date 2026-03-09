@@ -1,10 +1,18 @@
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
+import NextAuth, { type DefaultSession } from "next-auth";import Google from "next-auth/providers/google";
+
+// This tells TypeScript that 'session' includes our idToken
+declare module "next-auth" {
+  interface Session {
+    idToken?: string;
+  }
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Google({
       // This forces Google to provide the id_token if it's being shy
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
       authorization: {
         params: {
           scope: "openid email profile",
@@ -12,16 +20,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
     /**
      * Berkeley-only gate: only allow @berkeley.edu emails to sign in.
      */
     async signIn({ profile }) {
       const email = (profile as { email?: string } | null)?.email ?? "";
-      if (!email.endsWith("@berkeley.edu")) {
-        return false;
-      }
-      return true;
+      return email.endsWith("@berkeley.edu");
     },
 
     /**
