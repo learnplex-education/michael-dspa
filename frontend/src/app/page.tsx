@@ -3,6 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   useState,
   useEffect,
@@ -532,20 +533,69 @@ export default function Home() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
           {messages.length === 0 && !isActive && (
-            <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="flex flex-col items-center justify-center min-h-full bg-berkeley-blue text-white py-12 px-4">
               <motion.div
+                className="flex flex-col items-center justify-center space-y-6 w-full max-w-2xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="text-5xl mb-4">🐻</div>
-                <h2 className="text-2xl font-bold text-berkeley-blue mb-2">
-                  Michael-DSPA
-                </h2>
-                <p className="text-gray-500 mb-8 max-w-md">
-                  Ask me about major requirements, course planning, domain
-                  emphases, advising resources, and more!
-                </p>
+                {/* Hero Persona Card */}
+                <div className="flex flex-col items-center text-center">
+                  <Image
+                    src="/michael_headshot.jpeg"
+                    alt="Michael"
+                    width={96}
+                    height={96}
+                    className="w-24 h-24 rounded-full border-4 border-california-gold shadow-lg mb-4 mx-auto object-cover"
+                  />
+                  <h2 className="text-4xl font-bold text-white">
+                    Michael-DSPA
+                  </h2>
+                  <p className="text-california-gold font-medium tracking-wide uppercase text-sm mt-1">
+                    Your AI Data Science Peer Advisor
+                  </p>
+                </div>
+
+                {/* About Glassmorphism Card */}
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl max-w-2xl mx-auto my-8 w-full text-center">
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Trained on years of Peer Advising experience at UC Berkeley,
+                    official CDSS requirements, and Berkeley career resources.
+                    Michael-DSPA provides student-first guidance on your Data
+                    Science journey.
+                  </p>
+                </div>
+
+                {/* How it Works Feature Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
+                  <div className="text-center">
+                    <p className="text-blue-100/80 text-xs">
+                      📚 Academic Logic
+                    </p>
+                    <p className="text-blue-100/80 text-xs mt-1">
+                      2024-2026 Degree Requirements
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-blue-100/80 text-xs">
+                      💼 Career Focus
+                    </p>
+                    <p className="text-blue-100/80 text-xs mt-1">
+                      DS Internships, Resumes, & Interview Prep
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-blue-100/80 text-xs">
+                      🔗 Official Sources
+                    </p>
+                    <p className="text-blue-100/80 text-xs mt-1">
+                      Direct links to CDSS & Career Center docs
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sample query pills */}
                 <div className="flex flex-wrap gap-3 justify-center">
                   {SAMPLE_QUERIES.map(({ label, query }) => (
                     <motion.button
@@ -554,12 +604,19 @@ export default function Home() {
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleSample(query)}
                       disabled={limitReached}
-                      className="px-4 py-2 bg-white border-2 border-berkeley-blue/20 text-berkeley-blue rounded-full text-sm font-medium hover:border-berkeley-blue hover:bg-berkeley-blue hover:text-white transition-all disabled:opacity-40"
+                      className="px-5 py-2.5 bg-white text-berkeley-blue border-2 border-california-gold rounded-full text-sm font-medium hover:bg-california-gold hover:text-berkeley-blue hover:border-california-gold transition-all disabled:opacity-40"
                     >
                       {label}
                     </motion.button>
                   ))}
                 </div>
+
+                {/* Disclaimer */}
+                <p className="text-[10px] text-blue-200/80 text-center max-w-md pt-2">
+                  Michael-DSPA is an independent AI project. Always verify
+                  requirements with an official Data Science Undergraduate
+                  Studies staff advisor.
+                </p>
               </motion.div>
             </div>
           )}
