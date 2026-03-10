@@ -43,14 +43,20 @@ app = FastAPI(title="DSPA Bot API")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+ALLOWED_ORIGINS = frozenset({
+    "https://michael-dspa.learnplex.dev",
+    "https://michael-dspa-frontend.vercel.app",
+})
+
+
 @app.middleware("http")
 async def add_cors_header(request: Request, call_next):
-    # TEMP "nuclear" preflight bypass to stop Render 400s and log mobile Origin.
+    """Manual OPTIONS preflight handler so mobile Safari gets correct CORS headers."""
     if request.method == "OPTIONS":
         origin = request.headers.get("Origin")
-        print(f"Preflight from: {origin}")
         response = Response()
-        response.headers["Access-Control-Allow-Origin"] = origin or "*"
+        if origin and origin in ALLOWED_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, x-session-id"
         response.headers["Access-Control-Allow-Credentials"] = "true"
@@ -280,9 +286,11 @@ def _query_pinecone(question: str):
 # CORSMiddleware must be the LAST add_middleware call so it runs first on incoming requests
 app.add_middleware(
     CORSMiddleware,
-    # TEMP: simplest possible CORS to validate that Origin matching isn't the issue.
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "https://michael-dspa.learnplex.dev",
+        "https://michael-dspa-frontend.vercel.app",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     max_age=600,
