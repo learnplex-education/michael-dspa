@@ -10,10 +10,15 @@ This project follows a **Decoupled Cloud Architecture**, ensuring high availabil
 
 | Layer | Technology | Hosting | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Frontend** | Next.js 16 (React) | **Vercel** | Mobile-first UI with responsive "Hamburger" navigation. |
+| **Frontend** | Next.js 15+ (React) | **Vercel** | Mobile-first UI with responsive navigation and streaming chat. |
 | **Backend** | FastAPI (Python) | **Render** | High-performance API with Gunicorn/Uvicorn workers. |
 | **Vector DB** | Pinecone | **AWS Cloud** | Long-term "Memory" for 450+ indexed advising chunks. |
-| **LLM Engine** | OpenAI GPT-4o | **API** | Advanced reasoning and context-aware response generation. |
+| **LLM Engine** | OpenAI GPT-4o-mini | **API** | Deterministic, grounded responses (temperature=0). |
+
+### 📁 Repo Structure
+
+- `frontend/`: Next.js App Router UI (Vercel deploy)
+- `backend/`: FastAPI streaming API + Pinecone retrieval (Render deploy)
 
 
 
@@ -31,10 +36,17 @@ This project follows a **Decoupled Cloud Architecture**, ensuring high availabil
 * **Proxy-Aware Security:** Configured to track `X-Forwarded-For` headers, ensuring rate limits apply to actual client IPs when deployed behind Render's load balancer.
 * **CORS Protection:** Restricted backend access strictly to the Vercel production domain and local development environments.
 
+### 🔒 Secure Academic Access
+* **Berkeley-only sign-in:** Implemented **NextAuth.js (Google Provider)** and restricted access strictly to **@berkeley.edu** accounts.
+* **Purpose:** Ensures OpenAI credits are used only by the intended UC Berkeley Data Science student community.
+
 ### 📱 Mobile-First UX
 * **Responsive Design:** Custom Tailwind CSS drawer for mobile navigation and touch-friendly targets (44x44px).
 * **Input Optimization:** Standardized 16px font sizes to prevent intrusive iOS Safari "auto-zoom" bugs.
-* **Suggested Actions:** Integrated static "Quick Action" buttons to guide students toward high-value advising paths.
+* **CORS Preflight Fix (Mobile Safari):** Added a manual `OPTIONS` handler/middleware to reliably satisfy strict Mobile Safari preflight handshakes when using custom `x-session-id` headers.
+
+### 📊 Analytics
+* **Vercel Web Analytics:** Privacy-first product traction tracking across all pages.
 
 ---
 
@@ -45,8 +57,10 @@ This project follows a **Decoupled Cloud Architecture**, ensuring high availabil
    cd backend
    pip install -r requirements.txt
    python main.py
+   ```
 2. **Frontend:**
    ```bash
    cd frontend
    npm install
    npm run dev
+   ```
