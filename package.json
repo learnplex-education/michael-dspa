@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@vercel/analytics": "^1.6.1",
-    "next-auth": "^5.0.0-beta.30"
-  }
-}
