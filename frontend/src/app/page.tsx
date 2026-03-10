@@ -379,26 +379,29 @@ export default function Home() {
           {/* How it Works Feature Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
             <div className="text-center">
-              <p className="text-blue-100/80 text-xs">
-                📚 Academic Logic
+              <p className="text-white text-sm">📚</p>
+              <p className="mt-2 font-bold text-sm text-white">
+                Academic Logic
               </p>
-              <p className="text-blue-100/80 text-xs mt-1">
+              <p className="text-blue-100/90 text-sm mt-1">
                 2024-2026 Degree Requirements
               </p>
             </div>
             <div className="text-center">
-              <p className="text-blue-100/80 text-xs">
-                💼 Career Focus
+              <p className="text-white text-sm">💼</p>
+              <p className="mt-2 font-bold text-sm text-white">
+                Career Focus
               </p>
-              <p className="text-blue-100/80 text-xs mt-1">
+              <p className="text-blue-100/90 text-sm mt-1">
                 DS Internships, Resumes, & Interview Prep
               </p>
             </div>
             <div className="text-center">
-              <p className="text-blue-100/80 text-xs">
-                🔗 Official Sources
+              <p className="text-white text-sm">🔗</p>
+              <p className="mt-2 font-bold text-sm text-white">
+                Official Sources
               </p>
-              <p className="text-blue-100/80 text-xs mt-1">
+              <p className="text-blue-100/90 text-sm mt-1">
                 Direct links to CDSS & Career Center docs
               </p>
             </div>
