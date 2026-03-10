@@ -17,11 +17,15 @@ import { useSession, signIn, signOut, getSession } from "next-auth/react";
 
 const MAX_QUERIES = 10;
 
-const DEFAULT_API_URL = "https://michael-dspa-backend.onrender.com";
+/** Always use this absolute backend URL so we never accidentally hit a relative /api/chat (Vercel serverless). */
+const BACKEND_BASE_URL = "https://michael-dspa-backend.onrender.com";
 
-/** Use env API URL; when site is HTTPS, force API to HTTPS to avoid mixed-content "Load failed" on mobile. */
 function getApiUrl(): string {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL;
+  const fromEnv = process.env.NEXT_PUBLIC_API_URL;
+  const base =
+    typeof fromEnv === "string" && fromEnv.startsWith("http")
+      ? fromEnv
+      : BACKEND_BASE_URL;
   if (
     typeof window !== "undefined" &&
     window.location?.protocol === "https:" &&
@@ -30,6 +34,12 @@ function getApiUrl(): string {
     return base.replace("http://", "https://");
   }
   return base;
+}
+
+/** Absolute URL for the chat endpoint (never relative). Uses env override or Render backend. */
+function getChatApiUrl(): string {
+  const base = getApiUrl().replace(/\/$/, "");
+  return `${base}/chat`;
 }
 
 const SAMPLE_QUERIES = [
@@ -257,7 +267,7 @@ export default function Home() {
     authStatus === "authenticated" && !!session?.idToken;
 
   const transport = useMemo(() => {
-    const chatUrl = `${getApiUrl()}/chat`;
+    const chatUrl = getChatApiUrl();
     return new DefaultChatTransport({
       api: chatUrl,
       headers: {
@@ -265,6 +275,13 @@ export default function Home() {
         "X-Session-ID": sessionId,
       },
       fetch: async (input, init = {}) => {
+        const requestUrl =
+          typeof input === "string"
+            ? input
+            : input instanceof Request
+              ? input.url
+              : String(input);
+        console.log("Connecting to:", requestUrl);
         const freshSession = await getSession();
         init.headers = {
           ...(init.headers || {}),
