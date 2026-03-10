@@ -43,19 +43,12 @@ app = FastAPI(title="DSPA Bot API")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS must be the first middleware so preflight OPTIONS is handled before any other logic
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://michael-dspa-frontend.vercel.app",
-        "https://michael-dspa.learnplex.dev",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "x-session-id", "Accept", "Origin"],
-)
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler():
+    """Manual OPTIONS handler in case middleware is bypassed; returns 200 for CORS preflight."""
+    return {}
+
 
 STREAM_HEADERS = {
     "x-vercel-ai-ui-message-stream": "v1",
@@ -268,3 +261,26 @@ def _query_pinecone(question: str):
     )
     score_threshold = 0.25
     return [m for m in (res.matches or []) if m.score is None or m.score >= score_threshold]
+
+
+# CORSMiddleware must be the LAST add_middleware call so it runs first on incoming requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://michael-dspa-frontend.vercel.app",
+        "https://michael-dspa.learnplex.dev",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=[
+        "x-session-id",
+        "X-Session-ID",
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+    ],
+    max_age=600,
+)
