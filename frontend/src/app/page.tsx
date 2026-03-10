@@ -377,6 +377,12 @@ export default function Home() {
               Michael-DSPA provides student-first guidance on your Data Science
               journey.
             </p>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <p className="text-[11px] text-emerald-400/90 text-center">
+                ✅ All data synced with official 2025-26 UC Berkeley Data Science
+                major requirements
+              </p>
+            </div>
           </div>
 
           {/* How it Works Feature Grid */}
@@ -400,12 +406,7 @@ export default function Home() {
               </p>
             </div>
             <div className="text-center transition-transform hover:-translate-y-1">
-              <p className="text-white text-sm flex items-center justify-center gap-1">
-                🔗
-                <span className="inline-flex items-center gap-0.5 text-green-400 text-[10px] font-medium bg-green-400/20 px-1.5 py-0.5 rounded">
-                  ✓ Verified Info
-                </span>
-              </p>
+              <p className="text-white text-sm">🔗</p>
               <p className="mt-2 font-bold text-sm text-white">
                 Official Sources
               </p>
