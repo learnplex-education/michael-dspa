@@ -10,6 +10,7 @@
   "dependencies": {
     "@ai-sdk/react": "latest",
     "@tailwindcss/postcss": "^4.2.1",
+    "@vercel/analytics": "^1.6.1",
     "ai": "latest",
     "framer-motion": "latest",
     "next": "latest",
