@@ -1,4 +1,5 @@
-import NextAuth, { type DefaultSession } from "next-auth";import Google from "next-auth/providers/google";
+import NextAuth, { type DefaultSession } from "next-auth";
+import Google from "next-auth/providers/google";
 
 // This tells TypeScript that 'session' includes our idToken
 declare module "next-auth" {
@@ -42,10 +43,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      * so we can forward it to the FastAPI backend.
      */
     async jwt({ token, account, profile }) {
-      if (account) {
-        console.log("DEBUG: ACCOUNT OBJECT RECEIVED", Object.keys(account));
-        token.idToken = account.id_token;
-      }
+      const email = (profile as { email?: string } | null)?.email ?? undefined;
+      if (email) token.email = email;
+      if (account) token.idToken = account.id_token;
       return token;
     },
 
