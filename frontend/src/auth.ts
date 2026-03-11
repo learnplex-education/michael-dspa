@@ -1,10 +1,13 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
 
-// This tells TypeScript that 'session' includes our idToken
+// 1. Updated Module Augmentation for Auth.js v5
 declare module "next-auth" {
   interface Session {
     idToken?: string;
+    user?: {
+      email: string; // Ensure email is required in the session user
+    } & DefaultSession["user"];
   }
 }
 
@@ -19,7 +22,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorization: {
         params: {
           scope: "openid email profile",
-          prompt: "select_account", // This forces Google to show the account picker
+          prompt: "select_account",
           access_type: "offline",
           response_type: "code"
         },
@@ -30,36 +33,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-    /**
-     * Berkeley-only gate: only allow @berkeley.edu emails to sign in.
-     */
     async signIn({ profile }) {
-      const email = (profile as { email?: string } | null)?.email ?? "";
+      const email = profile?.email ?? "";
       return email.endsWith("@berkeley.edu");
     },
 
-    /**
-     * Token callback: capture Google's ID token on initial sign-in
-     * so we can forward it to the FastAPI backend.
-     */
     async jwt({ token, account, profile }) {
-      const email = (profile as { email?: string } | null)?.email ?? undefined;
-      if (email) token.email = email;
-      if (account) token.idToken = account.id_token;
+      // 2. Persist email from profile into the JWT token for proxy.ts access
+      if (profile?.email) {
+        token.email = profile.email;
+      }
+      if (account?.id_token) {
+        token.idToken = account.id_token;
+      }
       return token;
     },
 
-    /**
-     * Session callback: expose the ID token to the client session
-     * so the chat UI can send it as a Bearer token to FastAPI.
-     */
     async session({ session, token }) {
-      // Directly assign the property
+      // 3. Sync the token data to the session object
       if (token.idToken) {
         session.idToken = token.idToken as string;
+      }
+      if (token.email && session.user) {
+        session.user.email = token.email as string;
       }
       return session;
     },
   },
 });
-
